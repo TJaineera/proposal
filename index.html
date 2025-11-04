@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>💍 Will you marry me?</title>
+<meta name="theme-color" content="#6ee7f9" />
+<style>
+  :root{
+    --bg1:#0b1220; --bg2:#0f172a; --glass:rgba(255,255,255,.06);
+    --text:#f8fafc; --muted:#9aa7bd; --accent:#60a5fa; --accent2:#34d399; --chip:#122039;
+    --yes:#22d3ee; --yes2:#14b8a6; --no:#f43f5e;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{
+    margin:0; color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    overflow:hidden;
+    background: radial-gradient(1200px 800px at 20% -10%, rgba(96,165,250,.18), transparent 60%),
+                radial-gradient(1200px 800px at 120% 110%, rgba(52,211,153,.14), transparent 60%),
+                linear-gradient(180deg,var(--bg1),var(--bg2));
+  }
+  .ribbon, .ribbon2{
+    position:fixed; inset:auto; pointer-events:none; filter:blur(40px); opacity:.55; z-index:0;
+    background: conic-gradient(from 0deg, #22d3ee, #60a5fa, #a78bfa, #34d399, #22d3ee);
+    width:60vmax; height:60vmax; border-radius:50%;
+    animation: spin 30s linear infinite;
+  }
+  .ribbon{ top:-20vmax; left:-10vmax }
+  .ribbon2{ bottom:-25vmax; right:-15vmax; animation-duration: 40s; animation-direction: reverse; }
+  @keyframes spin{ to { transform: rotate(360deg)} }
+  #stars{ position:fixed; inset:0; z-index:0; pointer-events:none }
+  .wrap{ position:relative; height:100%; display:grid; place-items:center; padding:20px; z-index:1 }
+  .card{
+    width:min(920px,96vw); border-radius:28px; padding:28px; text-align:center; position:relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+    backdrop-filter: blur(12px);
+    box-shadow: 0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .card:before{
+    content:""; position:absolute; inset:-2px; border-radius:30px; padding:2px;
+    background: linear-gradient(135deg, rgba(96,165,250,.8), rgba(52,211,153,.7), rgba(167,139,250,.7));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
+  }
+  h1{
+    margin:2px 0 8px; font-size:clamp(32px,6vw,56px); line-height:1.1; font-weight:900;
+    background:linear-gradient(90deg,#fff,var(--accent),#a7f3d0);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow: 0 8px 32px rgba(96,165,250,.25);
+  }
+  .sub{ color:var(--muted); margin:0 auto 14px; font-size:clamp(14px,2.3vw,18px); max-width:68ch }
+  .chips{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:14px 0 10px }
+  .chip{ background:var(--chip); color:#dbe7ff; border:1px solid rgba(255,255,255,.1);
+         padding:8px 12px; border-radius:999px; font-size:13px; box-shadow:0 8px 24px rgba(0,0,0,.25) }
+  .btns{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:12px }
+  button{
+    padding:16px 24px; border-radius:16px; font-size:16px; font-weight:900; letter-spacing:.2px;
+    border:1px solid rgba(255,255,255,.12); cursor:pointer; user-select:none;
+    transform: translateZ(0); transition: transform .12s ease, box-shadow .2s ease, background .2s ease, filter .2s ease;
+  }
+  .yes{
+    color:#031018; background: radial-gradient(80% 120% at 20% 0%, var(--yes) 0%, var(--yes2) 60%, #0ea5e9 100%);
+    box-shadow: 0 18px 40px rgba(34,211,238,.38), 0 6px 16px rgba(20,184,166,.32), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .no{
+    color:#e2e8f0; background: radial-gradient(100% 140% at 80% 0%, #334155 0%, #111827 70%);
+    box-shadow: 0 14px 32px rgba(2,6,23,.6), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  button:hover{ transform: translateY(-2px) scale(1.02) }
+  .yes:hover{ filter: brightness(1.08) saturate(1.1) }
+  .no:hover{ filter: brightness(1.06) }
+  .tip{ position:absolute; padding:9px 12px; font-size:13px; color:#e6f0ff; background:#0b1220;
+        border:1px solid rgba(255,255,255,.12); border-radius:10px; white-space:nowrap;
+        transform:translate(-50%,-14px); opacity:0; pointer-events:none; transition:opacity .12s }
+  .tip.show{ opacity:1 }
+  .meter{ width:min(600px,90vw); height:12px; background:#0b1220; border:1px solid rgba(255,255,255,.12);
+          border-radius:999px; margin:14px auto 6px; position:relative; overflow:hidden}
+  .meter > i{ position:absolute; inset:0; transform-origin:left center; transform:scaleX(0);
+              background:linear-gradient(90deg, var(--yes), var(--yes2));
+              mask-image: linear-gradient(45deg, #000 30%, rgba(0,0,0,.6) 50%, #000 70%);
+              mask-size: 40px 100%; animation: shimmer 1.4s linear infinite; }
+  @keyframes shimmer{ to { mask-position: 40px 0 } }
+  .heart{ position:fixed; bottom:-20px; font-size:18px; pointer-events:none; animation:floatUp 6s linear forwards;
+          filter: drop-shadow(0 4px 10px rgba(0,0,0,.35)); z-index:3 }
+  @keyframes floatUp{0%{transform:translateY(0) translateX(0) scale(1);opacity:0}8%{opacity:1}100%{transform:translateY(-120vh) translateX(var(--dx)) scale(1.4);opacity:0}}
+  canvas#confetti{ position:fixed; inset:0; z-index:2; pointer-events:none }
+  .hint{ margin-top:10px; color:var(--muted); font-size:13px }
+  .footer{ position:fixed; bottom:10px; left:50%; transform:translateX(-50%); color:#8b95a7; font-size:12px; opacity:.7 }
+  /* Bounce keyframes for No button visual effect */
+  @keyframes boing {
+    0%   { transform: translate(0,0) scale(1); }
+    30%  { transform: translate(var(--tx, 0), var(--ty, 0)) scale(.96) rotate(var(--rot, 0deg)); }
+    60%  { transform: translate(calc(var(--tx, 0) * .7), calc(var(--ty, 0) * .7)) scale(1.04); }
+    100% { transform: translate(var(--tx, 0), var(--ty, 0)) scale(1); }
+  }
+  .no.bounce {
+    animation: boing 380ms cubic-bezier(.34,1.56,.64,1);
+  }
+  /* ripple effect */
+  .ripple{
+    position:absolute; border-radius:999px; pointer-events:none;
+    border:2px solid rgba(255,255,255,.5); opacity:.8;
+    transform: translate(-50%, -50%) scale(0);
+    animation: ripple .6s ease-out forwards;
+  }
+  @keyframes ripple { to { opacity:0; transform: translate(-50%,-50%) scale(1.4) } }
+</style>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+  <div class="ribbon"></div><div class="ribbon2"></div>
+
+  <div class="wrap">
+    <div class="card" id="card">
+      <h1 id="title">Will you marry me, Aswath? 💍</h1>
+      <div class="sub" id="subtitle">From Twinkle to Aswath: unlimited hugs, snack raids, and terrible jokes on demand.</div>
+
+      <div class="chips" id="chips"></div>
+      <div class="meter"><i id="meterFill"></i></div>
+
+      <div class="btns" id="btnRow">
+        <div style="position:relative">
+          <button class="yes" id="btnYes">Yes</button>
+          <div class="tip" id="tipYes">Yes tip</div>
+        </div>
+        <div style="position:relative">
+          <button class="no" id="btnNo">No</button>
+          <div class="tip" id="tipNo">No tip</div>
+        </div>
+      </div>
+      <div class="hint" id="hint">Both buttons show inside jokes. Choose wisely 😇</div>
+    </div>
+  </div>
+
+  <div class="footer">Made with 💙 by Twinkle</div>
+
+  <script>
+  const qs=new URLSearchParams(location.search);
+  const partner=qs.get("name")||"Aswath";
+  const from=qs.get("from")||"Twinkle";
+  byId("title").textContent=`Will you marry me, ${partner}? 💍`;
+  byId("subtitle").textContent=`From ${from} to ${partner}: unlimited hugs, snack raids, and terrible jokes on demand.`;
+
+  const yesJokes=[
+    "Lifetime Lego approvals 🧱",
+    "Co-pilot on all F1 Sundays 🏎️",
+    "Emergency dessert runs included 🍰",
+    "Your personal hype-woman forever 📸",
+    "Winter cuddle contract activated ❄️",
+    "Coffee delivery SLA: 99.9% ☕",
+    "Blanket theft reduced by 50% (maybe) 🛌"
+  ];
+  const noJokes=[
+    "You can’t say no after all that coffee ☕",
+    "Pit stop partner still needed 🏁",
+    "Unlimited winter cuddles on hold ❄️",
+    "I took 100 perfect photos of you 📸",
+    "Warning: 'No' unlocks dad-jokes 😏",
+    "Snacks are a love language 🍫",
+    "FYI: Yes button gains power 💪"
+  ];
+  const chips = [
+    "I promise to always annoy you 😜",
+    "I promise surprise dessert raids 🍨",
+    "I promise F1 Sundays are sacred 🏎️",
+    "I promise coffee on tough days ☕",
+    "I promise photo patience 📸",
+    "I promise extra winter cuddles ❄️"
+  ];
+  byId("chips").innerHTML = chips.map(t=>`<span class="chip">${t}</span>`).join("");
+
+  starfield();
+
+  const btnYes=byId("btnYes"), btnNo=byId("btnNo");
+  const tipYes=byId("tipYes"), tipNo=byId("tipNo");
+  const meter=byId("meterFill");
+  const titleEl=byId("title"), hint=byId("hint");
+  const btnRow = byId("btnRow");
+
+  let noClicks=0;
+
+  function cycleTip(el, list){
+    el.textContent=list[Math.floor(Math.random()*list.length)];
+    el.classList.add("show");
+    setTimeout(()=>el.classList.remove("show"), 1500);
+  }
+
+  // Magnetic hover for Yes (+ ripple)
+  btnYes.addEventListener("mousemove",(e)=>{
+    const r=e.currentTarget.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5;
+    const y=(e.clientY-r.top)/r.height-.5;
+    e.currentTarget.style.transform=`translateY(-2px) scale(1.04) rotateX(${y*6}deg) rotateY(${x*-6}deg)`;
+  });
+  btnYes.addEventListener("mouseleave",(e)=> e.currentTarget.style.transform="");
+  btnYes.addEventListener("mouseenter",()=>cycleTip(tipYes, yesJokes));
+  btnYes.addEventListener("click",(e)=>{ cycleTip(tipYes, yesJokes); ripple(e); celebrate(); });
+
+  // No button: bounded bounce + playful effects
+  btnNo.addEventListener("mouseenter",()=>cycleTip(tipNo, noJokes));
+  btnNo.addEventListener("click",(e)=>{
+    e.preventDefault();
+    noClicks++;
+    cycleTip(tipNo, noJokes);
+    ripple(e);
+    growYesShrinkNo();
+    bounceNo(); // new bounded bounce
+    meter.style.transform=`scaleX(${Math.min(noClicks/6,1)})`;
+    titleEl.textContent = [
+      `Are you sure, ${partner}? 🤨`,
+      `Think again… I make great pancakes. 🥞`,
+      `New offer unlocked: extra cuddles. 🧸`,
+      `Last chance to join the ${from} loyalty program. ⭐`,
+      `Plot twist: the correct answer is ‘Yes’. ✅`,
+      `Final boss approaching… choose wisely. 🎮`
+    ][Math.min(noClicks-1,5)];
+    if(noClicks>=7){
+      // Don't hide; just keep it tiny & bouncy
+      btnNo.style.transform+=' scale(.85)';
+      hint.textContent="Looks like ‘Yes’ is the only sensible choice left 😇";
+    }
+    burstHearts(9);
+  });
+
+  function growYesShrinkNo(){
+    const yScale = Math.min(1+noClicks*0.22, 3.3);
+    const nScale = Math.max(1-noClicks*0.1, .55);
+    btnYes.style.transform=`scale(${yScale})`;
+    btnNo.style.transform=`scale(${nScale})`;
+  }
+
+  // Bounded bounce: keeps No within a central safe zone of the viewport
+  function bounceNo(){
+    const rect = btnNo.getBoundingClientRect();
+    const vw = innerWidth, vh = innerHeight;
+    const margin = 24;
+    // Safe area = central 70% region
+    const minX = vw*0.15 + margin, maxX = vw*0.85 - rect.width - margin;
+    const minY = vh*0.20 + margin, maxY = vh*0.80 - rect.height - margin;
+
+    // Random target within safe bounds
+    const targetX = Math.max(minX, Math.min(maxX, rect.left + (Math.random()*2-1)*160));
+    const targetY = Math.max(minY, Math.min(maxY, rect.top  + (Math.random()*2-1)*140));
+
+    // Set CSS vars for bounce deltas and rotation
+    const dx = targetX - rect.left;
+    const dy = targetY - rect.top;
+    const rot = (Math.random()*12 - 6).toFixed(2) + "deg";
+
+    btnNo.style.setProperty('--tx', dx + 'px');
+    btnNo.style.setProperty('--ty', dy + 'px');
+    btnNo.style.setProperty('--rot', rot);
+
+    // Apply bounce animation class
+    btnNo.classList.remove('bounce');
+    void btnNo.offsetWidth; // reflow to restart animation
+    btnNo.classList.add('bounce');
+
+    // After animation, pin to the new spot and clear transforms
+    setTimeout(()=>{
+      btnNo.classList.remove('bounce');
+      btnNo.style.position='fixed';
+      btnNo.style.left = (rect.left + dx) + 'px';
+      btnNo.style.top  = (rect.top  + dy) + 'px';
+      btnNo.style.transform=''; // keep scale from growYesShrinkNo on next call
+    }, 380);
+  }
+
+  // Ripple visual
+  function ripple(e){
+    const btn = e.currentTarget;
+    const r = btn.getBoundingClientRect();
+    const d = Math.max(r.width, r.height);
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    const span = document.createElement('span');
+    span.className='ripple';
+    span.style.width=span.style.height=d+'px';
+    span.style.left=x+'px'; span.style.top=y+'px';
+    btn.parentElement.appendChild(span);
+    setTimeout(()=>span.remove(), 650);
+  }
+
+  function celebrate(){
+    startConfetti();
+    burstHearts(48);
+    titleEl.textContent=`He said YES! 💖`;
+  }
+
+  function burstHearts(count){
+    const emojis=["💖","💘","💝","💞","💗","💕","❤️","✨","🌟","💙"];
+    for(let i=0;i<count;i++){
+      const s=document.createElement('span');
+      s.className='heart';
+      s.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+      s.style.left=(Math.random()*(innerWidth-40)+20)+'px';
+      s.style.setProperty('--dx',(Math.random()*160-80)+'px');
+      s.style.animationDuration=(4+Math.random()*3)+'s';
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(),7000);
+    }
+  }
+
+  function startConfetti(){
+    const c=document.createElement('canvas'); c.id='confetti'; document.body.appendChild(c);
+    const ctx=c.getContext('2d'); let w,h,tid,running=true; const p=[];
+    function resize(){ w=c.width=innerWidth; h=c.height=innerHeight; }
+    addEventListener('resize',resize,{passive:true}); resize();
+    const colors=["#f472b6","#a78bfa","#60a5fa","#34d399","#fbbf24","#f87171","#c084fc","#22d3ee"];
+    for(let i=0;i<300;i++) p.push({x:Math.random()*w,y:Math.random()*-h,r:6+Math.random()*10,c:colors[Math.floor(Math.random()*colors.length)],s:1+Math.random()*2.6,a:Math.random()*Math.PI*2,spin:(Math.random()*.25)+.02});
+    (function draw(){
+      if(!running) return;
+      ctx.clearRect(0,0,w,h);
+      for(const o of p){
+        o.y+=o.s; o.x+=Math.sin(o.a)*0.9; o.a+=o.spin;
+        ctx.save(); ctx.translate(o.x,o.y); ctx.rotate(o.a); ctx.fillStyle=o.c;
+        ctx.fillRect(-o.r/2,-o.r/2,o.r,o.r*0.6); ctx.restore();
+        if(o.y>h+20){ o.y=-20; o.x=Math.random()*w; }
+      }
+      tid=requestAnimationFrame(draw);
+    })();
+    setTimeout(()=>{ running=false; cancelAnimationFrame(tid); ctx.clearRect(0,0,w,h); c.remove(); }, 11000);
+  }
+
+  function starfield(){
+    const c=byId('stars'), ctx=c.getContext('2d'); let w,h,stars=[];
+    function resize(){ w=c.width=innerWidth; h=c.height=innerHeight; }
+    addEventListener('resize',resize,{passive:true}); resize();
+    const count=Math.min(260, Math.floor((w*h)/9000));
+    for(let i=0;i<count;i++){ stars.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.3+0.2,s:Math.random()*0.6+0.2}); }
+    (function draw(){
+      ctx.clearRect(0,0,w,h);
+      for(const s of stars){
+        ctx.beginPath(); ctx.fillStyle=`hsla(${200+Math.random()*40},100%,${70+Math.random()*20}%,${.5+Math.random()*.5})`;
+        ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+        s.y+=s.s*0.12; if(s.y>h){ s.y=-5; s.x=Math.random()*w; }
+      }
+      requestAnimationFrame(draw);
+    })();
+  }
+
+  function byId(id){ return document.getElementById(id); }
+  </script>
+</body>
+</html>
